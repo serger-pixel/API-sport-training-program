@@ -1,0 +1,6 @@
+@API_sprot_training_program_HostAddress = http://localhost:5276
+
+GET {{API_sprot_training_program_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
