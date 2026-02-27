@@ -1,6 +1,7 @@
 ﻿using API_sprot_training_program.Models;
 using Microsoft.AspNetCore.Mvc;
-using static System.Net.WebRequestMethods;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using System.Reflection;
 
 namespace TrainingProgramApi.Controllers
 {
@@ -20,11 +21,11 @@ namespace TrainingProgramApi.Controllers
             }
         };
 
-        private static int _nextId = 2;
+        private static int _currentId = 2;
 
     
         [HttpGet]
-        public ActionResult<IEnumerable<DtoRead>> GetAll()
+        public IActionResult GetAll()
         {
             var result = _programs.Select(p => MapToDto(p));
             return Ok(result);
@@ -32,9 +33,9 @@ namespace TrainingProgramApi.Controllers
 
         
         [HttpGet("{id}")]
-        public ActionResult<DtoRead> GetById(int id)
+        public IActionResult GetById(int id)
         {
-            var program = _programs.FirstOrDefault(p => p.Id == id);
+            var program = _programs.FirstOrDefault(element => element.Id == id);
 
             if (program == null)
                 return NotFound();
@@ -44,11 +45,11 @@ namespace TrainingProgramApi.Controllers
 
         
         [HttpPost]
-        public ActionResult<DtoCreateUpdate> Create(DtoCreateUpdate dto)
+        public IActionResult Create(DtoCreateUpdate dto)
         {
             var program = new TrainingProgram
             {
-                Id = _nextId++,
+                Id = _currentId++,
                 Title = dto.Title,
                 Description = dto.Description,
                 DurationInWeek= dto.DurationInWeek,
@@ -56,8 +57,7 @@ namespace TrainingProgramApi.Controllers
             };
 
             _programs.Add(program);
-
-            return CreatedAtAction(nameof(GetById),
+            return CreatedAtAction(nameof(GetById), 
                 new { id = program.Id },
                 MapToDto(program));
         }
@@ -66,31 +66,30 @@ namespace TrainingProgramApi.Controllers
         [HttpPut("{id}")]
         public IActionResult Update(int id, DtoCreateUpdate dto)
         {
-            var program = _programs.FirstOrDefault(p => p.Id == id);
-
+            var program = _programs.FirstOrDefault(element => element.Id == id);
             if (program == null)
                 return NotFound();
 
-            program.Id = _nextId++;
             program.Title = dto.Title;
             program.Description = dto.Description;
+            program.CntInWeek = dto.CntInWeek;
             program.DurationInWeek = dto.DurationInWeek;
 
-            return Ok();
+            return NoContent();
         }
 
         
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var program = _programs.FirstOrDefault(p => p.Id == id);
+            var program = _programs.FirstOrDefault(element => element.Id == id);
 
             if (program == null)
                 return NotFound();
 
             _programs.Remove(program);
 
-            return Ok();
+            return NoContent();
         }
 
         
