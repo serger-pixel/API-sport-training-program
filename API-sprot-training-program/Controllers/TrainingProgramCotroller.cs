@@ -1,4 +1,5 @@
 ﻿using API_sprot_training_program.Models;
+using API_sprot_training_program.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using System.Reflection;
@@ -9,100 +10,68 @@ namespace TrainingProgramApi.Controllers
     [ApiController]
     public class TrainingProgramsController : ControllerBase
     {
-        private static List<TrainingProgram> _programs = new()
-        {
-            new TrainingProgram
-            {
-                Id = 1,
-                Title = "Начальная программа",
-                Description = "Программа для новичков",
-                DurationInWeek = 6,
-                CntInWeek = 10
-            }
-        };
+        TrainingProgramService _service;
+        public TrainingProgramsController(TrainingProgramService service) { 
+            _service = service;
+        }
 
-        private static int _currentId = 2;
 
-    
         [HttpGet]
-        public IActionResult GetAll()
-        {
-            var result = _programs.Select(p => MapToDto(p));
-            return Ok(result);
-        }
+        public async Task<List<DtoRead>> Get() =>await _service.GetAllAsync();
 
-        
+
         [HttpGet("{id}")]
-        public IActionResult GetById(int id)
+        public async Task<IActionResult> Get(long id)
         {
-            var program = _programs.FirstOrDefault(element => element.Id == id);
+            var program = await _service.GetByIdAsync(id);
 
-            if (program == null)
+            if (program is null)
+            {
                 return NotFound();
+            }
 
-            return Ok(MapToDto(program));
+            return CreatedAtAction(nameof(Get), program);
         }
 
-        
+
         [HttpPost]
-        public IActionResult Create(DtoCreateUpdate dto)
+        public async Task<IActionResult> Post(DtoCreateUpdate program)
         {
-            var program = new TrainingProgram
-            {
-                Id = _currentId++,
-                Title = dto.Title,
-                Description = dto.Description,
-                DurationInWeek= dto.DurationInWeek,
-                
-            };
+            await _service.CreateAsync(program);
 
-            _programs.Add(program);
-            return CreatedAtAction(nameof(GetById), 
-                new { id = program.Id },
-                MapToDto(program));
+            return CreatedAtAction(nameof(Post), program);
         }
 
-        
-        [HttpPut("{id}")]
-        public IActionResult Update(int id, DtoCreateUpdate dto)
-        {
-            var program = _programs.FirstOrDefault(element => element.Id == id);
-            if (program == null)
-                return NotFound();
 
-            program.Title = dto.Title;
-            program.Description = dto.Description;
-            program.CntInWeek = dto.CntInWeek;
-            program.DurationInWeek = dto.DurationInWeek;
+        [HttpPut("{id:length(24)}")]
+        public async Task<IActionResult> Update(long id, DtoCreateUpdate updateProgram)
+        {
+            var currentProgram = await _service.GetByIdAsync(id);
+
+            if (currentProgram is null)
+            {
+                return NotFound();
+            }
+
+            await _service.UpdateAsync(id, updateProgram);
 
             return NoContent();
         }
 
-        
+
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(long id)
         {
-            var program = _programs.FirstOrDefault(element => element.Id == id);
+            var program = await _service.GetByIdAsync(id);
 
-            if (program == null)
+            if (program is null)
+            {
                 return NotFound();
+            }
 
-            _programs.Remove(program);
+            await _service.DeleteAsync(id);
 
             return NoContent();
-        }
-
-        
-        private static DtoRead MapToDto(TrainingProgram program)
-        {
-            return new DtoRead
-            {
-                Id = program.Id,
-                Title = program.Title,
-                Description = program.Description,
-                DurationInWeek = program.DurationInWeek,
-                CntInWeek = program.CntInWeek
-            };
         }
     }
 }
