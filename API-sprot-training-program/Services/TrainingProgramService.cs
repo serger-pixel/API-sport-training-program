@@ -46,6 +46,27 @@ namespace API_sprot_training_program.Services
             await _programs.DeleteOneAsync(u => u.Id == id);
         }
 
+        private static DtoRead MapToDto(TrainingProgram program)
+        {
+            return new DtoRead
+            {
+                Id = program.Id,
+                Title = program.Title,
+                Description = program.Description,
+                DurationInWeek = program.DurationInWeek,
+                CntInWeek = program.CntInWeek
+            };
+        }
 
+        private static TrainingProgram MapToEntity(DtoCreateUpdate dto)
+        {
+            return new TrainingProgram
+            {
+                Title = dto.Title,
+                Description = dto.Description,
+                DurationInWeek = dto.DurationInWeek,
+                CntInWeek = dto.CntInWeek
+            };
+        }
     }
 }
