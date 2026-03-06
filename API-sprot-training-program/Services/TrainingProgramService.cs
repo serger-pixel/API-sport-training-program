@@ -21,29 +21,33 @@ namespace API_sprot_training_program.Services
                 settings.Value.CollectionName);
         }
 
-        public async Task<List<TrainingProgram>> GetAllAsync()
+        public async Task<List<DtoRead>> GetAllAsync()
         {
-            return await _programs.Find(_ => true).ToListAsync();
+            var _programsList = await _programs.Find(_ => true).ToListAsync();
+            return _programsList.Select(
+                element => MapToDto(element)
+                )
+                .ToList();
         }
 
-        public async Task<TrainingProgram> GetByIdAsync(long id)
+        public async Task<DtoRead> GetByIdAsync(long id)
         {
-            return await _programs.Find(u => u.Id == id).FirstOrDefaultAsync();
+            return MapToDto(await _programs.Find(element => element.Id == id).FirstOrDefaultAsync());
         }
 
-        public async Task CreateAsync(TrainingProgram user)
+        public async Task CreateAsync(DtoCreateUpdate program)
         {
-            await _programs.InsertOneAsync(user);
+            await _programs.InsertOneAsync(MapToEntity(program));
         }
 
-        public async Task UpdateAsync(long id, TrainingProgram user)
+        public async Task UpdateAsync(long id, DtoCreateUpdate program)
         {
-            await _programs.ReplaceOneAsync(u => u.Id == id, user);
+            await _programs.ReplaceOneAsync(element => element.Id == id, MapToEntity(program));
         }
 
         public async Task DeleteAsync(long id)
         {
-            await _programs.DeleteOneAsync(u => u.Id == id);
+            await _programs.DeleteOneAsync(element => element.Id == id);
         }
 
         private static DtoRead MapToDto(TrainingProgram program)
