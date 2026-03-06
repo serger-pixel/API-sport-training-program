@@ -1,12 +1,15 @@
 ﻿using API_sprot_training_program.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using System.Runtime.ConstrainedExecution;
 
 namespace API_sprot_training_program.Services
 {
     public class TrainingProgramService
     {
         private readonly IMongoCollection<TrainingProgram> _programs;
+
+        private const int LIMIT_OF_PROGRAMS = 1000;
 
         public TrainingProgramService(IOptions<DataBaseSettings> settings)
         {
@@ -21,10 +24,33 @@ namespace API_sprot_training_program.Services
                 settings.Value.CollectionName);
         }
 
+        public async Task<List<TrainingProgram>> GetRandomAsync(int count)
+        {
+    
+            var pipeline = new EmptyPipelineDefinition<TrainingProgram>()        
+                .Sample(count);            
+            return await _programs.Aggregate(pipeline).ToListAsync();
+        }
+
+        public async Task<List<TrainingProgram>> GetOrderAsync()
+        {
+            return await _programs.Find(_ => true).ToListAsync();
+        }
+
         public async Task<List<DtoRead>> GetAllAsync()
         {
-            var _programsList = await _programs.Find(_ => true).ToListAsync();
-            return _programsList.Select(
+            long count = await _programs.CountDocumentsAsync(_ => true);
+            List<TrainingProgram> programsList = null;
+            if (count == LIMIT_OF_PROGRAMS)
+            {
+                programsList = GetRandomAsync(LIMIT_OF_PROGRAMS).Result;
+            }
+            else
+            {
+                programsList = GetOrderAsync().Result;
+            }
+           
+            return programsList.Select(
                 element => MapToDto(element)
                 )
                 .ToList();
