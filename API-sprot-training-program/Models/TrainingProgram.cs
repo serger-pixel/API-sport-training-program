@@ -9,16 +9,12 @@ namespace API_sprot_training_program.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public String Id { get; set; }
 
-        [BsonDefaultValue("Программа")]
         public String Title { get; set; }
 
-        [BsonDefaultValue("Отсутсвует")]
         public String Description { get; set; }
 
-        [BsonDefaultValue(0)]
         public int DurationInWeek { get; set; }
 
-        [BsonDefaultValue(0)]
         public int CntInWeek { get; set; }
 
     }
