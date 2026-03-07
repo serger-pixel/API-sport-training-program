@@ -11,12 +11,20 @@ namespace API_sprot_training_program.Models
             MinimumLength = Validation.MIN_LEN_STRING,
             ErrorMessage = $"Длина названия должна быть от 5 до 255 символов."
         )]
+        [DataType(
+            DataType.Text,
+            ErrorMessage = "Название должно быть текстом."
+        )]
         public String Title { get; set; }
 
         [StringLength(
             Validation.MAX_LEN_STRING, 
             MinimumLength = Validation.MIN_LEN_STRING,
             ErrorMessage = $"Длина описания должна быть от 5 до 255 символов."
+        )]
+        [DataType(
+            DataType.Text,
+            ErrorMessage = "JОписание должно быть текстом."
         )]
         public String Description { get; set; }
 
