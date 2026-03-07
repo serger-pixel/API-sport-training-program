@@ -32,7 +32,7 @@ namespace API_sprot_training_program.Services
         }
 
 
-        public async Task<List<TrainingProgram>> GetWithFilter(String nameProperty, String value)
+        public async Task<List<TrainingProgram>> GetByFilter(String nameProperty, String value)
         {
             var property = typeof(TrainingProgram).GetProperty(nameProperty);
 

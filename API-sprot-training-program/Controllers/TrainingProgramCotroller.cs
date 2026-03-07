@@ -33,6 +33,18 @@ namespace TrainingProgramApi.Controllers
             return CreatedAtAction(nameof(Get), program);
         }
 
+        [HttpGet("filter")]
+        public async Task<IActionResult> GetByFilter(String nameProperty, String value)
+        {
+     
+            var programs = await _service.GetByFilter(nameProperty, value);
+            if (programs is null)
+            {
+                return NotFound();
+            }
+            return CreatedAtAction(nameof(GetByFilter), programs);
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> Post(DtoCreateUpdate program)
