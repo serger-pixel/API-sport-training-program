@@ -76,9 +76,9 @@ namespace API_sprot_training_program.Services
                 .ToList();
         }
 
-        public async Task<DtoRead> GetByIdAsync(long id)
+        public async Task<DtoRead> GetByIdAsync(String id)
         {
-            return MapToDto(await _programs.Find(element => element.Id == id).FirstOrDefaultAsync());
+            return MapToDto(await _programs.Find(element => element.Id.Equals(id)).FirstOrDefaultAsync());
         }
 
         public async Task CreateAsync(DtoCreateUpdate program)
@@ -86,14 +86,16 @@ namespace API_sprot_training_program.Services
             await _programs.InsertOneAsync(MapToEntity(program));
         }
 
-        public async Task UpdateAsync(long id, DtoCreateUpdate program)
+        public async Task UpdateAsync(String id, DtoCreateUpdate program)
         {
-            await _programs.ReplaceOneAsync(element => element.Id == id, MapToEntity(program));
+            var currentProgram = MapToEntity(program);
+            currentProgram.Id = id;
+            await _programs.ReplaceOneAsync(element => element.Id.Equals(id), currentProgram);
         }
 
-        public async Task DeleteAsync(long id)
+        public async Task DeleteAsync(String id)
         {
-            await _programs.DeleteOneAsync(element => element.Id == id);
+            await _programs.DeleteOneAsync(element => element.Id.Equals(id));
         }
 
         private static DtoRead MapToDto(TrainingProgram program)

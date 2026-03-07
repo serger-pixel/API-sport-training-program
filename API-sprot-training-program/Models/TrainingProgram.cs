@@ -7,7 +7,7 @@ namespace API_sprot_training_program.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public long Id { get; set; }
+        public String Id { get; set; }
 
         [BsonDefaultValue("Программа")]
         public String Title { get; set; }

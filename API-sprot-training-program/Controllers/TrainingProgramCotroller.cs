@@ -21,7 +21,7 @@ namespace TrainingProgramApi.Controllers
 
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(long id)
+        public async Task<IActionResult> Get(String id)
         {
             var program = await _service.GetByIdAsync(id);
 
@@ -43,8 +43,8 @@ namespace TrainingProgramApi.Controllers
         }
 
 
-        [HttpPut("{id:length(24)}")]
-        public async Task<IActionResult> Update(long id, DtoCreateUpdate updateProgram)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(String id, DtoCreateUpdate updateProgram)
         {
             var currentProgram = await _service.GetByIdAsync(id);
 
@@ -60,7 +60,7 @@ namespace TrainingProgramApi.Controllers
 
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(long id)
+        public async Task<IActionResult> Delete(String id)
         {
             var program = await _service.GetByIdAsync(id);
 

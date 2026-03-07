@@ -2,7 +2,7 @@
 {
     public class DtoRead
     {
-        public long Id { get; set; }
+        public String Id { get; set; }
 
         public String Title { get; set; }
 
