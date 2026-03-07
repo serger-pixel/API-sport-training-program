@@ -1,6 +1,7 @@
 ﻿using API_sprot_training_program.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using System.Reflection;
 using System.Runtime.ConstrainedExecution;
 
 namespace API_sprot_training_program.Services
@@ -10,6 +11,8 @@ namespace API_sprot_training_program.Services
         private readonly IMongoCollection<TrainingProgram> _programs;
 
         private const int LIMIT_OF_PROGRAMS = 1000;
+
+        private readonly System.Reflection.FieldInfo[] _properties;
 
         public TrainingProgramService(IOptions<DataBaseSettings> settings)
         {
@@ -22,6 +25,23 @@ namespace API_sprot_training_program.Services
 
             _programs = mongoDatabase.GetCollection<TrainingProgram>(
                 settings.Value.CollectionName);
+
+            Type type = typeof(TrainingProgram);
+
+            _properties = type.GetFields();
+        }
+
+
+        public async Task<List<TrainingProgram>> GetWithFilter(String nameProperty, String value)
+        {
+            var property = typeof(TrainingProgram).GetProperty(nameProperty);
+
+            if (property == null) return new List<TrainingProgram>();
+
+            var targetType = property.PropertyType;
+            var convertedValue = Convert.ChangeType(value, targetType);
+            var filter = Builders<TrainingProgram>.Filter.Eq(nameProperty, convertedValue);
+            return await _programs.Find(filter).ToListAsync();
         }
 
         public async Task<List<TrainingProgram>> GetRandomAsync(int count)
