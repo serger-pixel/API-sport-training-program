@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace TrainingProgramApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/programs")]
     [ApiController]
     public class TrainingProgramsController : ControllerBase
     {
@@ -83,6 +83,14 @@ namespace TrainingProgramApi.Controllers
 
             await _service.DeleteAsync(id);
 
+            return NoContent();
+        }
+
+
+        [HttpDelete("all")]
+        public async Task<IActionResult> DeleteAll()
+        {
+            await _service.DeleteAllAsync();
             return NoContent();
         }
     }

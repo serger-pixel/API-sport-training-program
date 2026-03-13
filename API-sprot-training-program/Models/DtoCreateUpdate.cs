@@ -24,7 +24,7 @@ namespace API_sprot_training_program.Models
         )]
         [DataType(
             DataType.Text,
-            ErrorMessage = "JОписание должно быть текстом."
+            ErrorMessage = "Описание должно быть текстом."
         )]
         public String Description { get; set; }
 

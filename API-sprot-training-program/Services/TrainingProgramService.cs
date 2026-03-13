@@ -98,6 +98,12 @@ namespace API_sprot_training_program.Services
             await _programs.DeleteOneAsync(element => element.Id.Equals(id));
         }
 
+        public async Task DeleteAllAsync()
+        {
+            var filter = Builders<TrainingProgram>.Filter.Empty;
+            await _programs.DeleteManyAsync(filter);
+        }
+
         private static DtoRead MapToDto(TrainingProgram program)
         {
             return new DtoRead
