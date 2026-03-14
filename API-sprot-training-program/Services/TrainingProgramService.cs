@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using System.Reflection;
 using System.Runtime.ConstrainedExecution;
+using System.Xml.Linq;
 
 namespace API_sprot_training_program.Services
 {
@@ -32,48 +33,54 @@ namespace API_sprot_training_program.Services
         }
 
 
-        public async Task<List<TrainingProgram>> GetByFilter(String nameProperty, String value)
+        public async Task<List<DtoRead>> GetByFilter(String nameProperty, String value)
         {
-            var property = typeof(TrainingProgram).GetProperty(nameProperty);
+            var property = typeof(DtoRead).GetProperty(nameProperty);
 
-            if (property == null) return new List<TrainingProgram>();
+            if (property == null) return new List<DtoRead>();
 
             var targetType = property.PropertyType;
             var convertedValue = Convert.ChangeType(value, targetType);
             var filter = Builders<TrainingProgram>.Filter.Eq(nameProperty, convertedValue);
-            return await _programs.Find(filter).ToListAsync();
+            var programsList = await _programs.Find(filter).ToListAsync();
+            return programsList.Select(
+                element => MapToDto(element)
+                )
+                .ToList();
         }
 
-        public async Task<List<TrainingProgram>> GetRandomAsync(int count)
+        public async Task<List<DtoRead>> GetRandomAsync(int count)
         {
     
             var pipeline = new EmptyPipelineDefinition<TrainingProgram>()        
-                .Sample(count);            
-            return await _programs.Aggregate(pipeline).ToListAsync();
+                .Sample(count);     
+            var programsList = await _programs.Aggregate(pipeline).ToListAsync();
+            return programsList.Select(
+                element => MapToDto(element)
+                )
+                .ToList();
         }
 
-        public async Task<List<TrainingProgram>> GetOrderAsync()
+        public async Task<List<DtoRead>> GetOrderAsync()
         {
-            return await _programs.Find(_ => true).ToListAsync();
+            var programsList = await _programs.Find(_ => true).ToListAsync();
+            return programsList.Select(
+                element => MapToDto(element)
+                )
+                .ToList();
         }
 
         public async Task<List<DtoRead>> GetAllAsync()
         {
             long count = await _programs.CountDocumentsAsync(_ => true);
-            List<TrainingProgram> programsList = null;
             if (count == LIMIT_OF_PROGRAMS)
             {
-                programsList = GetRandomAsync(LIMIT_OF_PROGRAMS).Result;
+                return GetRandomAsync(LIMIT_OF_PROGRAMS).Result;
             }
             else
             {
-                programsList = GetOrderAsync().Result;
+                return GetOrderAsync().Result;
             }
-           
-            return programsList.Select(
-                element => MapToDto(element)
-                )
-                .ToList();
         }
 
         public async Task<DtoRead> GetByIdAsync(String id)
