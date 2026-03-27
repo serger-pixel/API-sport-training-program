@@ -1,6 +1,4 @@
 ﻿using API_sprot_training_program.Models;
-using MongoDB.Driver;
-using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 
