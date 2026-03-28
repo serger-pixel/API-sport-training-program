@@ -1,31 +1,46 @@
 using API_sprot_training_program.Models;
 using API_sprot_training_program.Services;
-using MongoDB.Driver; 
+using Microsoft.Extensions.Options;
+using MongoDB.Driver;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using Prometheus;
+using Renci.SshNet.Messages;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-var connectionString =
-    builder.Configuration["TrainingProgramsDatabase:ConnectionString"];
-
-var databaseName =
-    builder.Configuration["TrainingProgramsDatabase:DatabaseName"];
+builder.Services.Configure<DataBaseSettings>(
+    builder.Configuration.GetSection("TrainingProgramsDatabase"));
 
 builder.Services.AddSingleton<IMongoClient>(sp =>
-    new MongoClient(connectionString));
+{
+    var settings = sp.GetRequiredService<IOptions<DataBaseSettings>>().Value;
+    return new MongoClient(settings.ConnectionString);
+});
 
 builder.Services.AddSingleton<IMongoDatabase>(sp =>
 {
+    var settings = sp.GetRequiredService<IOptions<DataBaseSettings>>().Value;
     var client = sp.GetRequiredService<IMongoClient>();
-    return client.GetDatabase(databaseName);
+
+    return client.GetDatabase(settings.DatabaseName);
 });
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService(serviceName: builder.Environment.ApplicationName))
+    .WithMetrics(metrics => metrics
+        .AddAspNetCoreInstrumentation() 
+        .AddPrometheusExporter());
 
 builder.Services.AddSingleton<TrainingProgramService>();
 
 
-    builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen();
 
 
 var app = builder.Build();
@@ -33,10 +48,11 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-
 app.UseHttpsRedirection(); 
 app.UseAuthorization();    
 
 app.MapControllers();
+
+app.MapPrometheusScrapingEndpoint();
 
 app.Run();
