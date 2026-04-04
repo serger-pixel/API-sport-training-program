@@ -1,8 +1,0 @@
-# .dockerignore
-**/bin/
-**/obj/
-**/out/
-**/*.user
-**/*.lock.json
-*.suo
-*.userosconfig

@@ -33,9 +33,14 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource
         .AddService(serviceName: builder.Environment.ApplicationName))
-    .WithMetrics(metrics => metrics
-        .AddAspNetCoreInstrumentation() 
-        .AddPrometheusExporter());
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .AddAspNetCoreInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddPrometheusExporter();
+    });
 
 builder.Services.AddSingleton<TrainingProgramService>();
 
