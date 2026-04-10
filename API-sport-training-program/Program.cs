@@ -30,6 +30,11 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
     return client.GetDatabase(settings.DatabaseName);
 });
 
+builder.Services.AddMetrics();
+
+builder.Services.AddSingleton<TrainingProgramService>();
+
+
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource
         .AddService(serviceName: builder.Environment.ApplicationName))
@@ -37,12 +42,12 @@ builder.Services.AddOpenTelemetry()
     {
         metrics
             .AddAspNetCoreInstrumentation()
+            .AddMeter("data_base_request_time")
             .AddRuntimeInstrumentation()
             .AddHttpClientInstrumentation()
             .AddPrometheusExporter();
     });
 
-builder.Services.AddSingleton<TrainingProgramService>();
 
 
 builder.Services.AddSwaggerGen();

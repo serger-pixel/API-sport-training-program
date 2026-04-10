@@ -1,6 +1,9 @@
-﻿using API_sprot_training_program.Models;
+﻿using API_sprot_training_program.Metrics;
+using API_sprot_training_program.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Reflection;
 using System.Runtime.ConstrainedExecution;
 using System.Xml.Linq;
@@ -11,11 +14,13 @@ namespace API_sprot_training_program.Services
     {
         private readonly IMongoCollection<TrainingProgram> _programs;
 
+        private readonly DataBaseRequestTime _data_base_metric;
+
         private const int LIMIT_OF_PROGRAMS = 1000;
 
         private readonly System.Reflection.FieldInfo[] _properties;
 
-        public TrainingProgramService(IOptions<DataBaseSettings> settings)
+        public TrainingProgramService(IOptions<DataBaseSettings> settings, IMeterFactory meterFactory)
         {
 
             var mongoClient = new MongoClient(
@@ -30,6 +35,8 @@ namespace API_sprot_training_program.Services
             Type type = typeof(TrainingProgram);
 
             _properties = type.GetFields();
+
+            _data_base_metric = new DataBaseRequestTime(meterFactory);
         }
 
 
@@ -42,8 +49,8 @@ namespace API_sprot_training_program.Services
             var targetType = property.PropertyType;
             var convertedValue = Convert.ChangeType(value, targetType);
             var filter = Builders<TrainingProgram>.Filter.Eq(nameProperty, convertedValue);
-            var programsList = await _programs.Find(filter).ToListAsync();
-            return programsList.Select(
+            var programsList = _programs.Find(filter).ToListAsync();
+            return programsList.Result.Select(
                 element => MapToDto(element)
                 )
                 .ToList();
@@ -51,11 +58,14 @@ namespace API_sprot_training_program.Services
 
         public async Task<List<DtoRead>> GetRandomAsync(int count)
         {
-    
             var pipeline = new EmptyPipelineDefinition<TrainingProgram>()        
-                .Sample(count);     
-            var programsList = await _programs.Aggregate(pipeline).ToListAsync();
-            return programsList.Select(
+                .Sample(count);
+            Stopwatch sw = new Stopwatch();
+            var programsList = _programs.Aggregate(pipeline).ToListAsync();
+            await programsList;
+            sw.Stop();
+            _data_base_metric.add_to_counter(sw.Elapsed.TotalSeconds);
+            return programsList.Result.Select(
                 element => MapToDto(element)
                 )
                 .ToList();
@@ -63,8 +73,12 @@ namespace API_sprot_training_program.Services
 
         public async Task<List<DtoRead>> GetOrderAsync()
         {
-            var programsList = await _programs.Find(_ => true).ToListAsync();
-            return programsList.Select(
+            Stopwatch sw = Stopwatch.StartNew();
+            var programsList = _programs.Find(_ => true).ToListAsync();
+            await programsList;
+            sw.Stop();
+            _data_base_metric.add_to_counter(sw.Elapsed.TotalSeconds);
+            return programsList.Result.Select(
                 element => MapToDto(element)
                 )
                 .ToList();
@@ -72,6 +86,7 @@ namespace API_sprot_training_program.Services
 
         public async Task<List<DtoRead>> GetAllAsync()
         {
+
             long count = await _programs.CountDocumentsAsync(_ => true);
             if (count == LIMIT_OF_PROGRAMS)
             {
@@ -83,32 +98,57 @@ namespace API_sprot_training_program.Services
             }
         }
 
-        public async Task<DtoRead> GetByIdAsync(String id)
+        public async Task<DtoRead?> GetByIdAsync(String id)
         {
-            return MapToDto(await _programs.Find(element => element.Id.Equals(id)).FirstOrDefaultAsync());
+            Stopwatch sw = Stopwatch.StartNew();
+            var element = _programs.Find(element => element.Id.Equals(id)).FirstOrDefaultAsync();
+            await element;
+            _data_base_metric.add_to_counter(sw.Elapsed.TotalSeconds);
+            if (element.Result == null)
+            {
+                return null;
+            }
+            return MapToDto(element.Result);
         }
 
         public async Task CreateAsync(DtoCreateUpdate program)
         {
-            await _programs.InsertOneAsync(MapToEntity(program));
+            Stopwatch sw = new Stopwatch();
+            var result = _programs.InsertOneAsync(MapToEntity(program));
+            await result;
+            sw.Stop();
+            _data_base_metric.add_to_counter(sw.Elapsed.TotalSeconds);
         }
 
-        public async Task UpdateAsync(String id, DtoCreateUpdate program)
+        public async Task<ReplaceOneResult> UpdateAsync(String id, DtoCreateUpdate program)
         {
             var currentProgram = MapToEntity(program);
             currentProgram.Id = id;
-            await _programs.ReplaceOneAsync(element => element.Id.Equals(id), currentProgram);
+            Stopwatch sw = Stopwatch.StartNew();
+            var result = _programs.ReplaceOneAsync(element => element.Id.Equals(id), currentProgram);
+            await result;
+            sw.Stop();
+            _data_base_metric.add_to_counter(sw.Elapsed.TotalSeconds);
+            return result.Result;
         }
 
-        public async Task DeleteAsync(String id)
+        public async Task<DeleteResult> DeleteAsync(String id)
         {
-            await _programs.DeleteOneAsync(element => element.Id.Equals(id));
+            Stopwatch sw = Stopwatch.StartNew();
+            var task = _programs.DeleteOneAsync(element => element.Id.Equals(id));
+            await task;
+            _data_base_metric.add_to_counter(sw.Elapsed.TotalSeconds);
+            return task.Result;
         }
 
-        public async Task DeleteAllAsync()
+        public async Task<DeleteResult> DeleteAllAsync()
         {
+            Stopwatch sw = Stopwatch.StartNew();
             var filter = Builders<TrainingProgram>.Filter.Empty;
-            await _programs.DeleteManyAsync(filter);
+            var task = _programs.DeleteManyAsync(filter);
+            await task;
+            _data_base_metric.add_to_counter(sw.Elapsed.TotalSeconds);
+            return task.Result;
         }
 
         private static DtoRead MapToDto(TrainingProgram program)
