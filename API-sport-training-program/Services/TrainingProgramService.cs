@@ -60,11 +60,11 @@ namespace API_sprot_training_program.Services
         {
             var pipeline = new EmptyPipelineDefinition<TrainingProgram>()        
                 .Sample(count);
-            Stopwatch sw = new Stopwatch();
+            Stopwatch sw = Stopwatch.StartNew();
             var programsList = _programs.Aggregate(pipeline).ToListAsync();
             await programsList;
             sw.Stop();
-            _data_base_metric.add_to_counter(sw.Elapsed.TotalSeconds);
+            _data_base_metric.add_to_counter(sw.Elapsed.TotalMilliseconds);
             return programsList.Result.Select(
                 element => MapToDto(element)
                 )
@@ -77,7 +77,7 @@ namespace API_sprot_training_program.Services
             var programsList = _programs.Find(_ => true).ToListAsync();
             await programsList;
             sw.Stop();
-            _data_base_metric.add_to_counter(sw.Elapsed.TotalSeconds);
+            _data_base_metric.add_to_counter(sw.Elapsed.TotalMilliseconds);
             return programsList.Result.Select(
                 element => MapToDto(element)
                 )
@@ -103,7 +103,7 @@ namespace API_sprot_training_program.Services
             Stopwatch sw = Stopwatch.StartNew();
             var element = _programs.Find(element => element.Id.Equals(id)).FirstOrDefaultAsync();
             await element;
-            _data_base_metric.add_to_counter(sw.Elapsed.TotalSeconds);
+            _data_base_metric.add_to_counter(sw.Elapsed.TotalMilliseconds);
             if (element.Result == null)
             {
                 return null;
@@ -113,11 +113,11 @@ namespace API_sprot_training_program.Services
 
         public async Task CreateAsync(DtoCreateUpdate program)
         {
-            Stopwatch sw = new Stopwatch();
+            Stopwatch sw = Stopwatch.StartNew();
             var result = _programs.InsertOneAsync(MapToEntity(program));
             await result;
             sw.Stop();
-            _data_base_metric.add_to_counter(sw.Elapsed.TotalSeconds);
+            _data_base_metric.add_to_counter(sw.Elapsed.TotalMilliseconds);
         }
 
         public async Task<ReplaceOneResult> UpdateAsync(String id, DtoCreateUpdate program)
@@ -128,7 +128,7 @@ namespace API_sprot_training_program.Services
             var result = _programs.ReplaceOneAsync(element => element.Id.Equals(id), currentProgram);
             await result;
             sw.Stop();
-            _data_base_metric.add_to_counter(sw.Elapsed.TotalSeconds);
+            _data_base_metric.add_to_counter(sw.Elapsed.TotalMilliseconds);
             return result.Result;
         }
 
@@ -137,7 +137,7 @@ namespace API_sprot_training_program.Services
             Stopwatch sw = Stopwatch.StartNew();
             var task = _programs.DeleteOneAsync(element => element.Id.Equals(id));
             await task;
-            _data_base_metric.add_to_counter(sw.Elapsed.TotalSeconds);
+            _data_base_metric.add_to_counter(sw.Elapsed.TotalMilliseconds);
             return task.Result;
         }
 
@@ -147,7 +147,7 @@ namespace API_sprot_training_program.Services
             var filter = Builders<TrainingProgram>.Filter.Empty;
             var task = _programs.DeleteManyAsync(filter);
             await task;
-            _data_base_metric.add_to_counter(sw.Elapsed.TotalSeconds);
+            _data_base_metric.add_to_counter(sw.Elapsed.TotalMilliseconds);
             return task.Result;
         }
 
