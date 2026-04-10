@@ -74,14 +74,12 @@ namespace TrainingProgramApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(String id)
         {
-            var program = await _service.GetByIdAsync(id);
+            var result = await _service.DeleteAsync(id);
 
-            if (program is null)
+            if (result.DeletedCount == 0)
             {
                 return NotFound();
             }
-
-            await _service.DeleteAsync(id);
 
             return NoContent();
         }
