@@ -22,6 +22,7 @@ builder.Services.AddSingleton<IDataBaseSettings>(
     new TraningsDataBaseSettings(
          Environment.GetEnvironmentVariable("redis_connection_string") ?? "coaches",
          Environment.GetEnvironmentVariable("collectoin_coaches") ?? "trainings",
+         Environment.GetEnvironmentVariable("collectoin_uncomf") ?? "uncomf",
          Environment.GetEnvironmentVariable("db_name") ?? "db"
         )
     );
