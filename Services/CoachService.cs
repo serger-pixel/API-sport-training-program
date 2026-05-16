@@ -12,13 +12,13 @@ namespace training_service_db.Services
     {
         private readonly IMongoCollection<Coach> _coaches;
 
+        private readonly IMongoCollection<Coach> _uncomf;
+
         private readonly DataBaseRequestTime _data_base_metric;
 
-        private readonly BrokerService _brokerService;
+        private readonly BrokerService _broker;
 
         private const int LIMIT_OF_COACHES = 1000;
-
-        private readonly CancellationToken token = new CancellationToken();
 
         public CoachService(IMongoClient mongoClient,
             IDataBaseSettings settings,
@@ -33,13 +33,16 @@ namespace training_service_db.Services
             _coaches = mongoDatabase.GetCollection<Coach>(
                 settings.CollectionNameCoach);
 
+            _uncomf = mongoDatabase.GetCollection<Coach>(
+                settings.CollectionNameUncomf);
+
             Type type = typeof(Coach);
 
             _data_base_metric = new DataBaseRequestTime(meterFactory);
 
-            _brokerService = new BrokerService();
+            _broker = new BrokerService(_coaches, _uncomf);
 
-   
+            Task.Run(()=> _broker.РrocessMessage());
         }
 
 
@@ -123,7 +126,7 @@ namespace training_service_db.Services
                 CoachId = coach.CoachId,
                 UserId = coach.UserId,
             };
-            _brokerService.SendMessage(message);
+            _broker.SendMessage(message);
             sw.Stop();
             _data_base_metric.add_value(sw.Elapsed.TotalMilliseconds);
             return MapToModel(coach);
