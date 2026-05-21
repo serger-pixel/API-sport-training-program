@@ -31,7 +31,5 @@ namespace training_service_db.Models
         public List<TrainingType> Specializations { get; set; }
 
         public string UserId { get; set; }
-
-        public string CoachId { get; set; }
     }
 }
