@@ -21,8 +21,8 @@ builder.Services.AddSingleton<IMongoClient>(new MongoClient(connection_string_da
 builder.Services.AddSingleton<IDataBaseSettings>(
     new TraningsDataBaseSettings(
          Environment.GetEnvironmentVariable("redis_connection_string") ?? "coaches",
-         Environment.GetEnvironmentVariable("collectoin_coaches") ?? "trainings",
-         Environment.GetEnvironmentVariable("collectoin_uncomf") ?? "uncomf",
+         Environment.GetEnvironmentVariable("collection_coaches") ?? "trainings",
+         Environment.GetEnvironmentVariable("collection_uncomf") ?? "uncomf",
          Environment.GetEnvironmentVariable("db_name") ?? "db"
         )
     );
@@ -35,6 +35,9 @@ builder.Services.AddStackExchangeRedisCache(options =>
 
     options.InstanceName = "Api-Sport-Training";
 });
+
+builder.Services.AddScoped<ConsumerService>();
+builder.Services.AddHostedService<ConsumerService>();
 
 builder.Services.AddMetrics();
 

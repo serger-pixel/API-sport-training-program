@@ -1,10 +1,12 @@
-﻿using training_service_db.Metrics;
-using training_service_db.Models;
+﻿using API_sprot_training_program.Services;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Xml.Linq;
+using training_service_db.Metrics;
+using training_service_db.Models;
 
 namespace training_service_db.Services
 {
@@ -16,7 +18,7 @@ namespace training_service_db.Services
 
         private readonly DataBaseRequestTime _data_base_metric;
 
-        private readonly BrokerService _broker;
+        private readonly ProducerService _messSender;
 
         private const int LIMIT_OF_COACHES = 1000;
 
@@ -40,9 +42,7 @@ namespace training_service_db.Services
 
             _data_base_metric = new DataBaseRequestTime(meterFactory);
 
-            _broker = new BrokerService(_coaches, _uncomf);
-
-            Task.Run(()=> _broker.РrocessMessage());
+            _messSender = new ProducerService();
         }
 
 
@@ -117,19 +117,20 @@ namespace training_service_db.Services
             return MapToOutput(element.Result);
         }
 
-        public async Task<Coach?> CreateAsync(CoachInput coach)
+        public async Task<Coach?> CreateAsync(CoachInput coachInput)
         {
             Stopwatch sw = Stopwatch.StartNew();
-            await _coaches.InsertOneAsync(MapToModel(coach));
+            Coach coachModel = MapToModel(coachInput);
+            _uncomf.InsertOne(coachModel);
             ProducerMessage message = new ProducerMessage()
             {
-                CoachId = coach.CoachId,
-                UserId = coach.UserId,
+                IdConfirmObject = coachModel.Id,
+                IdDecisionMaker = coachModel.UserId,
             };
-            _broker.SendMessage(message);
+            _messSender.SendMessage(message);
             sw.Stop();
             _data_base_metric.add_value(sw.Elapsed.TotalMilliseconds);
-            return MapToModel(coach);
+            return coachModel;
         }
 
         public async Task<ReplaceOneResult> UpdateAsync(String id, CoachInput coach)
@@ -186,21 +187,25 @@ namespace training_service_db.Services
                 SecondName = coach.SecondName,
                 MainEducation = coach.MainEducation,
                 SubEducation = coach.SubEducation,
-                Specializations = new List<TrainingType>(coach.Specializations)
-            };
+                Specializations = new List<TrainingType>(coach.Specializations),
+                UserId =coach.UserId, 
+                TimeConfirm = coach.TimeConfirm
+    };
         }
 
         private static Coach MapToModel(CoachInput coach)
         {
-            return new Coach
+            return new Coach()
             {
                 Name = coach.Name,
                 MiddleName = coach.MiddleName,
                 SecondName = coach.SecondName,
                 MainEducation = coach.MainEducation,
                 SubEducation = coach.SubEducation,
-                Specializations = new List<TrainingType>(coach.Specializations)
-            };
+                Specializations = new List<TrainingType>(coach.Specializations),
+                UserId = coach.UserId
+            }
+            ;
         }
     }
 }
