@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace TrainingProgramApi.Controllers
 {
-    [Route("api/programs")]
+    [Route("programs")]
     [ApiController]
     public class TrainingController : ControllerBase
     {

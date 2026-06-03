@@ -1,12 +1,13 @@
 ﻿using API_sprot_training_program.Models;
 using API_sprot_training_program.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using System.Reflection;
 
 namespace TrainingcoachApi.Controllers
 {
-    [Route("api/coaches")]
+    [Route("coaches")]
     [ApiController]
     public class CoachController : ControllerBase
     {
@@ -18,10 +19,12 @@ namespace TrainingcoachApi.Controllers
 
 
         [HttpGet]
+        [Authorize]
         public async Task<List<CoachOutput>> Get() => await _service.GetAllAsync();
 
 
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> Get(String id)
         {
             var coach = await _service.GetByIdAsync(id);
@@ -35,6 +38,7 @@ namespace TrainingcoachApi.Controllers
         }
 
         [HttpGet("filter")]
+        [Authorize]
         public async Task<IActionResult> GetByFilter(String nameProperty, String value)
         {
 
@@ -48,6 +52,7 @@ namespace TrainingcoachApi.Controllers
 
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> Post(CoachInput coach)
         {
             await _service.CreateAsync(coach);
@@ -56,6 +61,7 @@ namespace TrainingcoachApi.Controllers
 
 
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> Update(String id, CoachInput updatecoach)
         {
             var currentcoach = await _service.GetByIdAsync(id);
@@ -72,6 +78,7 @@ namespace TrainingcoachApi.Controllers
 
 
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> Delete(String id)
         {
             var result = await _service.DeleteAsync(id);
@@ -86,6 +93,7 @@ namespace TrainingcoachApi.Controllers
 
 
         [HttpDelete("all")]
+        [Authorize]
         public async Task<IActionResult> DeleteAll()
         {
             await _service.DeleteAllAsync();
